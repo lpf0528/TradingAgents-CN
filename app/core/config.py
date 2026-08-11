@@ -299,6 +299,24 @@ class Settings(BaseSettings):
     BAOSTOCK_INIT_BATCH_SIZE: int = Field(default=50, ge=10, le=500, description="初始化批处理大小")
     BAOSTOCK_INIT_AUTO_START: bool = Field(default=False, description="应用启动时自动检查并初始化数据")
 
+    # ==================== 股票代码过滤配置 ====================
+    STOCK_CODE_PREFIX_FILTER_ENABLED: bool = Field(
+        default=False,
+        description="是否启用股票代码前缀过滤（开启后仅爬取/同步指定前缀的股票）"
+    )
+    STOCK_CODE_ALLOWED_PREFIXES: List[str] = Field(
+        default_factory=lambda: ["60", "00"],
+        description="允许爬取/同步的股票代码前缀列表（默认仅保留 60 沪市主板和 00 深市主板/中小板）"
+    )
+
+    @property
+    def effective_allowed_prefixes(self) -> List[str]:
+        """获取规范化的允许前缀列表"""
+        prefixes = self.STOCK_CODE_ALLOWED_PREFIXES
+        if isinstance(prefixes, str):
+            return [p.strip() for p in prefixes.split(",") if p.strip()]
+        return list(prefixes)
+
     # 数据目录配置
     TRADINGAGENTS_DATA_DIR: str = Field(default="./data")
 

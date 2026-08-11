@@ -105,7 +105,9 @@ class AKShareAdapter(DataSourceAdapter):
             df['industry'] = ''
             df['list_date'] = ''
 
-            logger.info(f"AKShare: Successfully fetched {len(df)} stocks with real names")
+            from .base import filter_stocks_by_prefix
+            df = filter_stocks_by_prefix(df)
+            logger.info(f"AKShare: Successfully fetched {len(df) if df is not None else 0} stocks with real names")
             return df
 
         except Exception as e:

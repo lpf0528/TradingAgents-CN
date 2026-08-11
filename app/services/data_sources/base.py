@@ -67,3 +67,54 @@ class DataSourceAdapter(ABC):
     def get_news(self, code: str, days: int = 2, limit: int = 50, include_announcements: bool = True):
         """获取新闻/公告，返回 [{title, source, time, url, type}]，type in ['news','announcement']"""
         raise NotImplementedError
+
+
+def filter_stocks_by_prefix(df: Optional[pd.DataFrame], code_col: str = "symbol") -> Optional[pd.DataFrame]:
+    """
+    根据系统配置过滤股票代码前缀（如开启过滤且允许 ['60', '00']，则仅保留沪深主板股票）
+
+    Args:
+        df: 包含股票代码列的 DataFrame
+        code_col: 股票代码列名（默认为 'symbol'，也可为 'code' 或 'ts_code'）
+
+    Returns:
+        过滤后的 DataFrame
+    """
+    if df is None or getattr(df, "empty", True):
+        return df
+
+    try:
+        from app.core.config import settings
+        if not getattr(settings, "STOCK_CODE_PREFIX_FILTER_ENABLED", False):
+            return df
+
+        allowed_prefixes = tuple(settings.effective_allowed_prefixes)
+        if not allowed_prefixes:
+            return df
+
+        # 校验列是否存在
+        target_col = None
+        for col in [code_col, "symbol", "code", "ts_code"]:
+            if col in df.columns:
+                target_col = col
+                break
+
+        if not target_col:
+            return df
+
+        # 提取 6 位纯数字股票代码并匹配前缀
+        series = df[target_col].astype(str)
+        # 如果是 ts_code (例如 600000.SH)，先提纯数字部分
+        clean_codes = series.str.extract(r"(\d{6})")[0].fillna(series)
+        mask = clean_codes.str.startswith(allowed_prefixes)
+
+        filtered_df = df[mask].copy()
+        import logging
+        logging.getLogger(__name__).info(
+            f"🔍 [股票前缀过滤] 从 {len(df)} 条过滤保留 {len(filtered_df)} 条 (允许前缀: {allowed_prefixes})"
+        )
+        return filtered_df
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"⚠️ [股票前缀过滤] 执行过滤失败: {e}")
+        return df

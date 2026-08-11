@@ -126,12 +126,14 @@ class DataSourceManager:
             available_adapters = preferred + others
             logger.info(f"Reordered adapters: {[a.name for a in available_adapters]}")
 
+        from .base import filter_stocks_by_prefix
         for adapter in available_adapters:
             try:
                 logger.info(f"Trying to fetch stock list from {adapter.name}")
                 df = adapter.get_stock_list()
                 if df is not None and not df.empty:
-                    return df, adapter.name
+                    filtered_df = filter_stocks_by_prefix(df)
+                    return filtered_df, adapter.name
             except Exception as e:
                 logger.error(f"Failed to fetch stock list from {adapter.name}: {e}")
                 continue

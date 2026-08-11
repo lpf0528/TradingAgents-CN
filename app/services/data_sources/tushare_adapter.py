@@ -70,10 +70,11 @@ class TushareAdapter(DataSourceAdapter):
             logger.warning("Tushare: Provider is not available")
             return None
         try:
-            # 使用 TushareProvider 的同步方法
+            from .base import filter_stocks_by_prefix
             df = self._provider.get_stock_list_sync()
             if df is not None and not df.empty:
-                logger.info(f"Tushare: Successfully fetched {len(df)} stocks")
+                df = filter_stocks_by_prefix(df)
+                logger.info(f"Tushare: Successfully fetched {len(df) if df is not None else 0} stocks")
                 return df
         except Exception as e:
             logger.error(f"Tushare: Failed to fetch stock list: {e}")

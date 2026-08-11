@@ -96,7 +96,9 @@ class BaoStockAdapter(DataSourceAdapter):
 
                 df['market'] = '\u4e3b\u677f'
                 df['list_date'] = ''
-                logger.info(f"BaoStock: Successfully fetched {len(df)} stocks")
+                from .base import filter_stocks_by_prefix
+                df = filter_stocks_by_prefix(df)
+                logger.info(f"BaoStock: Successfully fetched {len(df) if df is not None else 0} stocks")
                 return df[['symbol', 'name', 'ts_code', 'area', 'industry', 'market', 'list_date']]
             finally:
                 bs.logout()
