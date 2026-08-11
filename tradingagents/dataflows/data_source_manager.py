@@ -1605,41 +1605,62 @@ class DataSourceManager:
         logger.error(f"❌ 所有数据源都无法获取{symbol}的股票信息")
         return {'symbol': symbol, 'name': f'股票{symbol}', 'source': 'unknown'}
 
-    def _get_akshare_stock_info(self, symbol: str) -> Dict:
-        """使用AKShare获取股票基本信息
+    def _get_tushare_stock_info(self, symbol: str) -> Dict:
+        """使用Tushare获取股票基本信息"""
+        try:
+            provider = self._get_tushare_adapter()
+            if provider and provider.is_available():
+                stock_info = safe_run_async(lambda: provider.get_stock_basic_info(symbol))
+                if stock_info and isinstance(stock_info, dict):
+                    name = stock_info.get('name', f'股票{symbol}')
+                    if name and name != f'股票{symbol}':
+                        return {
+                            'symbol': symbol,
+                            'name': name,
+                            'area': stock_info.get('area', '未知'),
+                            'industry': stock_info.get('industry', '未知'),
+                            'market': stock_info.get('market', '未知'),
+                            'list_date': stock_info.get('list_date', '未知'),
+                            'exchange': stock_info.get('exchange', '未知'),
+                            'source': 'tushare'
+                        }
+            logger.warning(f"⚠️ [Tushare股票信息] 未获取到有效数据或服务不可用: {symbol}")
+            return {'symbol': symbol, 'name': f'股票{symbol}', 'source': 'tushare'}
+        except Exception as e:
+            logger.error(f"❌ [股票信息] Tushare获取失败: {symbol}, 错误: {e}")
+            return {'symbol': symbol, 'name': f'股票{symbol}', 'source': 'tushare', 'error': str(e)}
 
-        🔥 重要：AKShare 需要区分股票和指数
-        - 对于 000001，如果不加后缀，会被识别为"深圳成指"（指数）
-        - 对于股票，需要使用完整代码（如 sz000001 或 sh600000）
-        """
+    def _get_akshare_stock_info(self, symbol: str) -> Dict:
+        """使用AKShare获取股票基本信息"""
+        # 1. 优先使用 AKShareProvider (具备 Headers 补丁与代理绕过重试)
+        try:
+            provider = self._get_akshare_adapter()
+            if provider and provider.is_available():
+                stock_info = safe_run_async(lambda: provider.get_stock_basic_info(symbol))
+                if stock_info and isinstance(stock_info, dict):
+                    name = stock_info.get('name', f'股票{symbol}')
+                    if name and name != f'股票{symbol}':
+                        return {
+                            'symbol': symbol,
+                            'name': name,
+                            'area': stock_info.get('area', '未知'),
+                            'industry': stock_info.get('industry', '未知'),
+                            'market': stock_info.get('market', '未知'),
+                            'list_date': stock_info.get('list_date', '未知'),
+                            'source': 'akshare'
+                        }
+        except Exception as e:
+            logger.warning(f"⚠️ [AKShareProvider] 获取股票信息异常，降级到直连: {e}")
+
+        # 2. 备用方案：直接调用 akshare 基础接口 (使用纯6位代码，避免带sz/sh前缀破坏API)
         try:
             import akshare as ak
 
-            # 🔥 转换为 AKShare 格式的股票代码
-            # AKShare 的 stock_individual_info_em 需要使用 "sz000001" 或 "sh600000" 格式
-            if symbol.startswith('6'):
-                # 上海股票：600000 -> sh600000
-                akshare_symbol = f"sh{symbol}"
-            elif symbol.startswith(('0', '3', '2')):
-                # 深圳股票：000001 -> sz000001
-                akshare_symbol = f"sz{symbol}"
-            elif symbol.startswith(('8', '4')):
-                # 北京股票：830000 -> bj830000
-                akshare_symbol = f"bj{symbol}"
-            else:
-                # 其他情况，直接使用原始代码
-                akshare_symbol = symbol
-
-            logger.debug(f"📊 [AKShare股票信息] 原始代码: {symbol}, AKShare格式: {akshare_symbol}")
-
-            # 尝试获取个股信息
-            stock_info = ak.stock_individual_info_em(symbol=akshare_symbol)
+            stock_info = ak.stock_individual_info_em(symbol=symbol)
 
             if stock_info is not None and not stock_info.empty:
-                # 转换为字典格式
                 info = {'symbol': symbol, 'source': 'akshare'}
 
-                # 提取股票名称
                 name_row = stock_info[stock_info['item'] == '股票简称']
                 if not name_row.empty:
                     stock_name = name_row['value'].iloc[0]
@@ -1649,11 +1670,12 @@ class DataSourceManager:
                     info['name'] = f'股票{symbol}'
                     logger.warning(f"⚠️ [AKShare股票信息] 未找到股票简称: {symbol}")
 
-                # 提取其他信息
-                info['area'] = '未知'  # AKShare没有地区信息
-                info['industry'] = '未知'  # 可以通过其他API获取
-                info['market'] = '未知'  # 可以根据股票代码推断
-                info['list_date'] = '未知'  # 可以通过其他API获取
+                industry_row = stock_info[stock_info['item'] == '所属行业']
+                info['industry'] = industry_row['value'].iloc[0] if not industry_row.empty else '未知'
+                area_row = stock_info[stock_info['item'] == '所属地区']
+                info['area'] = area_row['value'].iloc[0] if not area_row.empty else '未知'
+                info['market'] = '未知'
+                info['list_date'] = '未知'
 
                 return info
             else:
@@ -1666,6 +1688,25 @@ class DataSourceManager:
 
     def _get_baostock_stock_info(self, symbol: str) -> Dict:
         """使用BaoStock获取股票基本信息"""
+        try:
+            provider = self._get_baostock_adapter()
+            if provider and provider.is_available():
+                stock_info = safe_run_async(lambda: provider.get_stock_basic_info(symbol))
+                if stock_info and isinstance(stock_info, dict):
+                    name = stock_info.get('name', f'股票{symbol}')
+                    if name and name != f'股票{symbol}':
+                        return {
+                            'symbol': symbol,
+                            'name': name,
+                            'area': stock_info.get('area', '未知'),
+                            'industry': stock_info.get('industry', '未知'),
+                            'market': stock_info.get('market', '未知'),
+                            'list_date': stock_info.get('list_date', '未知'),
+                            'source': 'baostock'
+                        }
+        except Exception as e:
+            logger.warning(f"⚠️ [BaoStockProvider] 获取股票信息异常，降级到直连: {e}")
+
         try:
             import baostock as bs
 

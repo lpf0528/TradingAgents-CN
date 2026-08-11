@@ -75,7 +75,6 @@ class AKShareProvider(BaseStockDataProvider):
                     if use_curl_cffi and 'eastmoney.com' in url:
                         try:
                             # 使用 curl_cffi 模拟 Chrome 120 的 TLS 指纹
-                            # 注意：使用 impersonate 时，不要传递自定义 headers，让 curl_cffi 自动设置
                             curl_kwargs = {
                                 'timeout': kwargs.get('timeout', 10),
                                 'impersonate': "chrome120"  # 模拟 Chrome 120
@@ -84,15 +83,24 @@ class AKShareProvider(BaseStockDataProvider):
                             # 只传递非 headers 的参数
                             if 'params' in kwargs:
                                 curl_kwargs['params'] = kwargs['params']
-                            # 不传递 headers，让 impersonate 自动设置
                             if 'data' in kwargs:
                                 curl_kwargs['data'] = kwargs['data']
                             if 'json' in kwargs:
                                 curl_kwargs['json'] = kwargs['json']
+                            if 'proxies' in kwargs:
+                                curl_kwargs['proxies'] = kwargs['proxies']
 
-                            response = curl_requests.get(url, **curl_kwargs)
-                            # curl_cffi 的响应对象已经兼容 requests.Response
-                            return response
+                            try:
+                                response = curl_requests.get(url, **curl_kwargs)
+                                return response
+                            except Exception as cffi_err:
+                                err_str = str(cffi_err)
+                                if ('56' in err_str or 'Proxy' in err_str or 'proxy' in err_str or 'Connection closed' in err_str) and 'proxies' not in curl_kwargs:
+                                    logger.warning(f"⚠️ curl_cffi 检测到代理连接异常({cffi_err})，尝试直连绕过代理: {url[:60]}...")
+                                    direct_curl_kwargs = curl_kwargs.copy()
+                                    direct_curl_kwargs['proxies'] = {'http': '', 'https': ''}
+                                    return curl_requests.get(url, **direct_curl_kwargs)
+                                raise cffi_err
                         except Exception as e:
                             # curl_cffi 失败，回退到标准 requests
                             error_msg = str(e)
@@ -429,7 +437,32 @@ class AKShareProvider(BaseStockDataProvider):
     async def _get_stock_info_detail(self, code: str) -> Dict[str, Any]:
         """获取股票详细信息"""
         try:
-            # 方法1: 尝试获取个股详细信息（包含行业、地区等详细信息）
+            # 方法1: 轻量级 Eastmoney 接口直连 (最快速可靠，避开 ak.stock_individual_info_em 过多字段引发的服务器断开问题)
+            def fetch_direct_em_info():
+                try:
+                    import requests
+                    secid = f"1.{code}" if str(code).startswith(('6', '9')) else f"0.{code}"
+                    url = f"https://push2.eastmoney.com/api/qt/stock/get?fltt=2&invt=2&fields=f57,f58,f127,f189&secid={secid}"
+                    resp = requests.get(url, timeout=5)
+                    if resp.status_code == 200:
+                        data = resp.json().get('data')
+                        if data and isinstance(data, dict) and data.get('f58'):
+                            return {
+                                "code": code,
+                                "name": str(data.get('f58')),
+                                "industry": str(data.get('f127', '未知')),
+                                "area": "未知",
+                                "list_date": str(data.get('f189', ''))
+                            }
+                except Exception as ex:
+                    logger.debug(f"Direct Eastmoney query for {code} failed: {ex}")
+                return None
+
+            direct_info = await asyncio.to_thread(fetch_direct_em_info)
+            if direct_info and direct_info.get("name") and direct_info["name"] != f"股票{code}":
+                return direct_info
+
+            # 方法2: 尝试获取个股详细信息 (AKShare 接口)
             def fetch_individual_info():
                 return self.ak.stock_individual_info_em(symbol=code)
 
