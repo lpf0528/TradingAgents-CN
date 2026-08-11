@@ -202,6 +202,12 @@ class StartupValidator:
         for config in self.RECOMMENDED_CONFIGS:
             value = os.getenv(config.key)
 
+            # 如果设置了自定义统一中转密钥 CUSTOM_OPENAI_API_KEY 或 OPENAI_API_KEY，亦视为推荐 LLM 密钥已配置
+            if not value and config.key in ("DEEPSEEK_API_KEY", "DASHSCOPE_API_KEY"):
+                alt_key = os.getenv("CUSTOM_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+                if alt_key and self._is_valid_api_key(alt_key):
+                    value = alt_key
+
             if not value:
                 self.result.missing_recommended.append(config)
                 logger.warning(f"⚠️  缺少推荐配置: {config.key}")

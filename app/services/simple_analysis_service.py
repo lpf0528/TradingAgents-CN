@@ -404,7 +404,10 @@ def _get_default_provider_by_model(model_name: str) -> str:
         'qwen-plus-latest': 'qwen',
         'qwen-max-longcontext': 'qwen',
 
-        # OpenAI
+        # OpenAI / Custom OpenAI
+        'gpt-5.6-luna': 'custom_openai',
+        'qwen3.8-max': 'custom_openai',
+        'deepseek-v4-pro': 'custom_openai',
         'gpt-3.5-turbo': 'openai',
         'gpt-4': 'openai',
         'gpt-4-turbo': 'openai',

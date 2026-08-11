@@ -512,6 +512,9 @@ def render_sidebar():
             
             # 模型选择
             custom_openai_options = [
+                "gpt-5.6-luna",
+                "qwen3.8-max",
+                "deepseek-v4-pro",
                 "gpt-4o",
                 "gpt-4o-mini", 
                 "gpt-4-turbo",
@@ -539,6 +542,9 @@ def render_sidebar():
                 options=custom_openai_options,
                 index=current_index,
                 format_func=lambda x: {
+                    "gpt-5.6-luna": "GPT-5.6 Luna - TenRouter",
+                    "qwen3.8-max": "Qwe3.8 Max - TenRouter",
+                    "deepseek-v4-pro": "DeepSeek V4 Pro - TenRouter",
                     "gpt-4o": "GPT-4o - OpenAI最新旗舰",
                     "gpt-4o-mini": "GPT-4o Mini - 轻量旗舰",
                     "gpt-4-turbo": "GPT-4 Turbo - 强化版",

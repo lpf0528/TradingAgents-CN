@@ -11,12 +11,18 @@ ProviderModeOptions = Dict[str, Dict[str, List[ModelOption]]]
 MODEL_OPTIONS: ProviderModeOptions = {
     "openai": {
         "quick": [
+            ("GPT-5.6 Luna", "gpt-5.6-luna"),
+            ("Qwe3.8 Max", "qwen3.8-max"),
+            ("DeepSeek V4 Pro", "deepseek-v4-pro"),
             ("GPT-4o Mini - Fast and cost-effective", "gpt-4o-mini"),
             ("GPT-4.1 Mini - Compact, capable", "gpt-4.1-mini"),
             ("GPT-4.1 Nano - Lightweight", "gpt-4.1-nano"),
             ("Custom model ID", "custom"),
         ],
         "deep": [
+            ("GPT-5.6 Luna", "gpt-5.6-luna"),
+            ("Qwe3.8 Max", "qwen3.8-max"),
+            ("DeepSeek V4 Pro", "deepseek-v4-pro"),
             ("o4-mini - Reasoning focused", "o4-mini"),
             ("o3-mini - Advanced reasoning", "o3-mini"),
             ("GPT-4o - Balanced general model", "gpt-4o"),
@@ -150,11 +156,17 @@ MODEL_OPTIONS: ProviderModeOptions = {
     },
     "custom_openai": {
         "quick": [
+            ("GPT-5.6 Luna", "gpt-5.6-luna"),
+            ("Qwe3.8 Max", "qwen3.8-max"),
+            ("DeepSeek V4 Pro", "deepseek-v4-pro"),
             ("GPT-4o Mini", "gpt-4o-mini"),
             ("GPT-4o", "gpt-4o"),
             ("Custom model ID", "custom"),
         ],
         "deep": [
+            ("GPT-5.6 Luna", "gpt-5.6-luna"),
+            ("Qwe3.8 Max", "qwen3.8-max"),
+            ("DeepSeek V4 Pro", "deepseek-v4-pro"),
             ("GPT-4o", "gpt-4o"),
             ("o1", "o1"),
             ("Custom model ID", "custom"),

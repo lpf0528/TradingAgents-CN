@@ -54,6 +54,7 @@ def env_key_for_provider(provider: str) -> str:
         "google": "GOOGLE_API_KEY",
         "qwen": "DASHSCOPE_API_KEY",
         "openai": "OPENAI_API_KEY",
+        "custom_openai": "CUSTOM_OPENAI_API_KEY",
         "deepseek": "DEEPSEEK_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
         "openrouter": "OPENROUTER_API_KEY",
@@ -72,7 +73,8 @@ def default_backend_url(provider: str) -> str:
     default_urls = {
         "google": "https://generativelanguage.googleapis.com/v1beta",
         "qwen": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "openai": "https://api.openai.com/v1",
+        "openai": "https://tenrouter.weike.fm/v1",
+        "custom_openai": "https://tenrouter.weike.fm/v1",
         "deepseek": "https://api.deepseek.com",
         "anthropic": "https://api.anthropic.com",
         "openrouter": "https://openrouter.ai/api/v1",
