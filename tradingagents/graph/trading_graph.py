@@ -424,11 +424,23 @@ class TradingAgentsGraph:
             )
             logger.info("✅ [DeepSeek] 已通过 llm_clients 初始化成功并应用用户配置的模型参数")
         elif normalized_provider == "custom_openai":
-            custom_api_key = os.getenv('CUSTOM_OPENAI_API_KEY')
+            custom_api_key = (
+                self.config.get("custom_openai_api_key")
+                or self.config.get("quick_api_key")
+                or self.config.get("deep_api_key")
+                or os.getenv('CUSTOM_OPENAI_API_KEY')
+                or os.getenv('OPENAI_API_KEY')
+            )
             if not custom_api_key:
-                raise ValueError("使用自定义OpenAI端点需要设置CUSTOM_OPENAI_API_KEY环境变量")
+                raise ValueError("使用自定义OpenAI端点需要设置CUSTOM_OPENAI_API_KEY或OPENAI_API_KEY环境变量")
 
-            custom_base_url = self.config.get("custom_openai_base_url", "https://api.openai.com/v1")
+            custom_base_url = (
+                self.config.get("custom_openai_base_url")
+                or (self.config.get("backend_url") if self.config.get("backend_url") != "https://api.openai.com/v1" else None)
+                or os.getenv("CUSTOM_OPENAI_BASE_URL")
+                or os.getenv("OPENAI_BASE_URL")
+                or "https://tenrouter.weike.fm/v1"
+            )
             logger.info(f"🔧 [自定义OpenAI] 使用端点: {custom_base_url}")
             self.deep_thinking_llm, self.quick_thinking_llm = _create_provider_pair(
                 provider="custom_openai",

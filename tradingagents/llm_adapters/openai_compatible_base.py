@@ -406,14 +406,13 @@ class ChatCustomOpenAI(OpenAICompatibleBase):
         max_tokens: Optional[int] = None,
         **kwargs
     ):
-        # 如果没有传入 base_url，尝试从环境变量读取
-        if base_url is None:
-            env_base_url = os.getenv("CUSTOM_OPENAI_BASE_URL")
-            # 只使用有效的环境变量值（不是占位符）
+        # 如果没有传入 base_url 或传入的是默认的 api.openai.com，但环境变量中配置了中转地址（如 TenRouter），优先从环境变量读取
+        if base_url is None or base_url == "https://api.openai.com/v1":
+            env_base_url = os.getenv("CUSTOM_OPENAI_BASE_URL") or os.getenv("OPENAI_BASE_URL")
             if env_base_url and not env_base_url.startswith('your_') and not env_base_url.startswith('your-'):
                 base_url = env_base_url
-            else:
-                base_url = "https://api.openai.com/v1"
+            elif base_url is None:
+                base_url = "https://tenrouter.weike.fm/v1"
 
         super().__init__(
             provider_name="custom_openai",

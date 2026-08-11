@@ -1291,6 +1291,8 @@ class SimpleAnalysisService:
             config["quick_backend_url"] = quick_backend_url
             config["deep_backend_url"] = deep_backend_url
             config["backend_url"] = quick_backend_url  # 保持向后兼容
+            config["custom_openai_base_url"] = quick_backend_url
+            config["custom_openai_api_key"] = config.get("quick_api_key")
 
             # 🔍 验证配置中的模型
             logger.info(f"🔍 [模型验证] 配置中的快速模型: {config.get('quick_think_llm')}")
