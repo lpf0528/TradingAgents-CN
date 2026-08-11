@@ -406,8 +406,8 @@ def _get_default_provider_by_model(model_name: str) -> str:
 
         # OpenAI / Custom OpenAI
         'gpt-5.6-luna': 'custom_openai',
-        'qwen3.8-max': 'custom_openai',
-        'deepseek-v4-pro': 'custom_openai',
+        'qwen3.7-plus': 'custom_openai',
+        'deepseek-v4-flash': 'custom_openai',
         'gpt-3.5-turbo': 'openai',
         'gpt-4': 'openai',
         'gpt-4-turbo': 'openai',
