@@ -158,7 +158,7 @@ class Settings(BaseSettings):
     HTTP_PROXY: str = Field(default="")
     HTTPS_PROXY: str = Field(default="")
     NO_PROXY: str = Field(
-        default="localhost,127.0.0.1,eastmoney.com,push2.eastmoney.com,82.push2.eastmoney.com,82.push2delay.eastmoney.com,gtimg.cn,sinaimg.cn,api.tushare.pro,baostock.com"
+        default="localhost,127.0.0.1,eastmoney.com,.eastmoney.com,push2.eastmoney.com,push2his.eastmoney.com,82.push2.eastmoney.com,83.push2.eastmoney.com,82.push2delay.eastmoney.com,quote.eastmoney.com,datacenter.eastmoney.com,dfcfw.com,.dfcfw.com,gtimg.cn,.gtimg.cn,sinaimg.cn,.sinaimg.cn,sina.com.cn,.sina.com.cn,api.tushare.pro,.tushare.pro,baostock.com,.baostock.com,akshare.xyz,.akshare.xyz"
     )
 
     # 文件上传配置

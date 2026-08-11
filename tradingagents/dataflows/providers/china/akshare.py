@@ -128,10 +128,19 @@ class AKShareProvider(BaseStockDataProvider):
                         try:
                             return original_get(url, **kwargs)
                         except Exception as e:
-                            # 检查是否是SSL错误
                             error_str = str(e)
-                            is_ssl_error = ('SSL' in error_str or 'ssl' in error_str or
-                                          'UNEXPECTED_EOF_WHILE_READING' in error_str)
+                            is_proxy_error = ('ProxyError' in error_str or 'Unable to connect to proxy' in error_str or 'RemoteDisconnected' in error_str or '56' in error_str)
+                            is_ssl_error = ('SSL' in error_str or 'ssl' in error_str or 'UNEXPECTED_EOF_WHILE_READING' in error_str)
+
+                            if is_proxy_error and 'proxies' not in kwargs:
+                                # 代理连接失败，尝试绕过代理直接连接国内接口
+                                logger.warning(f"⚠️ 检测到代理连接异常({e})，尝试直接连接绕过代理: {url[:60]}...")
+                                direct_kwargs = kwargs.copy()
+                                direct_kwargs['proxies'] = {'http': None, 'https': None}
+                                try:
+                                    return original_get(url, **direct_kwargs)
+                                except Exception as direct_err:
+                                    logger.warning(f"⚠️ 直连也失败: {direct_err}")
 
                             if is_ssl_error and attempt < max_retries - 1:
                                 # SSL错误，等待后重试
@@ -139,7 +148,6 @@ class AKShareProvider(BaseStockDataProvider):
                                 time.sleep(wait_time)
                                 continue
                             else:
-                                # 非SSL错误或已达到最大重试次数，直接抛出
                                 raise
 
                 # 应用patch
