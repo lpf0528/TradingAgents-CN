@@ -108,7 +108,7 @@ class TushareProvider(BaseStockDataProvider):
                         if ds_type == 'tushare':
                             api_key = ds_config.get('api_key')
                             self.logger.info(f"✅ [DB查询] 找到 Tushare 配置，api_key 长度: {len(api_key) if api_key else 0}")
-                            if api_key and not api_key.startswith("your_"):
+                            if api_key and not (api_key.lower().startswith("your_") or api_key.lower().startswith("your-") or "placeholder" in api_key.lower()):
                                 self.logger.info(f"✅ [DB查询] Token 有效 (长度: {len(api_key)})")
                                 return api_key
                             else:
