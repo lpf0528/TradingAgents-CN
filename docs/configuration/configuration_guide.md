@@ -230,6 +230,16 @@ AKSHARE_UNIFIED_ENABLED=true
 
 **特点**: 免费、无需API密钥、数据丰富
 
+#### 股票代码前缀过滤（可选）
+
+用于限制仅同步与爬取特定板块的股票（如仅保留 60 沪市主板和 00 深市主板/中小板股票）：
+
+```bash
+# [OPTIONAL] 股票前缀过滤
+STOCK_CODE_PREFIX_FILTER_ENABLED=true
+STOCK_CODE_ALLOWED_PREFIXES=60,00
+```
+
 #### FinnHub（推荐，美股数据）
 
 ```bash

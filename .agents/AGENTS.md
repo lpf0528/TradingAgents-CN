@@ -43,7 +43,20 @@ TAVILY_API_KEY=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
 
 # 默认数据源
 DEFAULT_CHINA_DATA_SOURCE=akshare
+
+# 代理与国内域名绕过配置
+NO_PROXY=localhost,127.0.0.1,eastmoney.com,.eastmoney.com,push2.eastmoney.com,push2his.eastmoney.com,82.push2.eastmoney.com,83.push2.eastmoney.com,82.push2delay.eastmoney.com,quote.eastmoney.com,datacenter.eastmoney.com,dfcfw.com,.dfcfw.com,gtimg.cn,.gtimg.cn,sinaimg.cn,.sinaimg.cn,sina.com.cn,.sina.com.cn,api.tushare.pro,.tushare.pro,baostock.com,.baostock.com,akshare.xyz,.akshare.xyz
+
+# 股票代码前缀过滤配置（如仅爬取/同步 60、00 开头的沪深主板股票）
+STOCK_CODE_PREFIX_FILTER_ENABLED=false
+STOCK_CODE_ALLOWED_PREFIXES=60,00
 ```
+
+### 4. 数据源高可用与过滤规范
+
+- **代理绕过机制**：AKShare 内部请求增加 `ProxyError` / `RemoteDisconnected` 自动拦截，检测到本地代理中断时强行直连国内 API 服务。
+- **Tushare 频率超限保护**：Tushare 连通性测试捕获到 `频率超限`（Rate Limit）时，将其认定为 Token 有效（`connected=True`），避免因频次限制误判为连接失败。
+- **股票前缀过滤**：开启 `STOCK_CODE_PREFIX_FILTER_ENABLED=true` 后，`DataSourceManager` 及底层 Adapters (`AKShare` / `Tushare` / `BaoStock`) 会自动截取匹配 `STOCK_CODE_ALLOWED_PREFIXES` 的股票列表进行同步。
 
 ### Web 界面配置：
 在 **系统设置 -> 配置管理 -> 厂家管理** 中添加 `Custom OpenAI` 提供商，填入对应 `Base URL` 与 `API Key`，并注册模型 `gpt-5.6-luna` 设为默认分析模型。

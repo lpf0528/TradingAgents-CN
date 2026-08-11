@@ -39,7 +39,7 @@ HTTPS_PROXY=http://127.0.0.1:10809
 # 配置需要绕过代理的域名（国内数据源）
 # 多个域名用逗号分隔
 # ⚠️ Windows 不支持通配符 *，必须使用完整域名
-NO_PROXY=localhost,127.0.0.1,eastmoney.com,push2.eastmoney.com,82.push2.eastmoney.com,82.push2delay.eastmoney.com,gtimg.cn,sinaimg.cn,api.tushare.pro,baostock.com
+NO_PROXY=localhost,127.0.0.1,eastmoney.com,.eastmoney.com,push2.eastmoney.com,push2his.eastmoney.com,82.push2.eastmoney.com,83.push2.eastmoney.com,82.push2delay.eastmoney.com,quote.eastmoney.com,datacenter.eastmoney.com,dfcfw.com,.dfcfw.com,gtimg.cn,.gtimg.cn,sinaimg.cn,.sinaimg.cn,sina.com.cn,.sina.com.cn,api.tushare.pro,.tushare.pro,baostock.com,.baostock.com,akshare.xyz,.akshare.xyz
 ```
 
 **说明**：
@@ -47,12 +47,11 @@ NO_PROXY=localhost,127.0.0.1,eastmoney.com,push2.eastmoney.com,82.push2.eastmone
 - `HTTPS_PROXY`：HTTPS 代理服务器地址
 - `NO_PROXY`：需要绕过代理的域名列表
   - `localhost,127.0.0.1`：本地地址
-  - `eastmoney.com`：东方财富主域名
-  - `push2.eastmoney.com`：东方财富推送服务
-  - `82.push2.eastmoney.com`：东方财富推送服务（IP 前缀）
-  - `82.push2delay.eastmoney.com`：东方财富延迟推送服务
-  - `gtimg.cn`：腾讯财经
-  - `sinaimg.cn`：新浪财经
+  - `eastmoney.com` / `.eastmoney.com`：东方财富主域名及全量子域名
+  - `push2his.eastmoney.com`：东方财富历史 K 线数据接口
+  - `82.push2.eastmoney.com` / `83.push2.eastmoney.com`：东方财富行情推送服务
+  - `gtimg.cn` / `.gtimg.cn`：腾讯财经
+  - `sinaimg.cn` / `sina.com.cn`：新浪财经
   - `api.tushare.pro`：Tushare 数据接口
   - `baostock.com`：BaoStock 数据接口
 
