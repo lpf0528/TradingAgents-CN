@@ -74,6 +74,8 @@ class TushareProvider(BaseStockDataProvider):
         self.api = None
         self.config = get_provider_config("tushare")
         self.token_source = None  # 记录 Token 来源: 'database' 或 'env'
+        self._last_connect_attempt = 0.0
+        self._connect_cooldown = 300.0  # 5分钟冷却，避免频繁连通性测试扣减配额
 
         if not TUSHARE_AVAILABLE:
             self.logger.error("❌ Tushare库未安装，请运行: pip install tushare")
@@ -132,6 +134,14 @@ class TushareProvider(BaseStockDataProvider):
             self.logger.error("❌ Tushare库不可用")
             return False
 
+        import time
+        now = time.time()
+        # 冷却判断：若5分钟内刚连通成功过，无需再次发起网络 ping 请求
+        if self.connected and (now - self._last_connect_attempt < self._connect_cooldown):
+            return True
+
+        self._last_connect_attempt = now
+
         # 测试连接超时时间（秒）- 只是测试连通性，不需要很长时间
         test_timeout = 10
 
@@ -151,6 +161,30 @@ class TushareProvider(BaseStockDataProvider):
             else:
                 self.logger.info("⚠️ [步骤2] .env 中未找到 Token")
 
+            # 辅助轻量连通性测试闭包（优先使用轻量的交易日历 trade_cal 接口）
+            def _test_api_connection(api_instance) -> bool:
+                try:
+                    self.logger.info("🔄 调用轻量级 trade_cal API 测试连通性...")
+                    cal_df = api_instance.trade_cal(exchange='', start_date='20240101', end_date='20240101')
+                    if cal_df is not None and not cal_df.empty:
+                        self.logger.info("✅ 轻量级 trade_cal API 调用成功，Token 有效")
+                        return True
+                except Exception as e:
+                    self.logger.warning(f"⚠️ trade_cal 测试异常: {e}，尝试 stock_basic...")
+
+                try:
+                    test_data = api_instance.stock_basic(list_status='L', limit=1)
+                    if test_data is not None and not test_data.empty:
+                        self.logger.info("✅ stock_basic API 调用成功")
+                        return True
+                except Exception as e:
+                    err_msg = str(e)
+                    if any(kw in err_msg for kw in ["频率超限", "频次", "每分钟", "每小时", "limit"]):
+                        self.logger.warning(f"⚠️ Tushare Token 有效但目前受限于 API 调频控制 ({e})，判定为已连接受限模式")
+                        return True
+                    self.logger.warning(f"⚠️ API 测试失败: {e}")
+                return False
+
             # 尝试数据库 Token
             if db_token:
                 try:
@@ -158,23 +192,7 @@ class TushareProvider(BaseStockDataProvider):
                     ts.set_token(db_token)
                     self.api = ts.pro_api()
 
-                    # 测试连接 - 直接调用同步方法（不使用 asyncio.run）
-                    rate_limited = False
-                    try:
-                        self.logger.info("🔄 [步骤3.1] 调用 stock_basic API 测试连接...")
-                        test_data = self.api.stock_basic(list_status='L', limit=1)
-                        self.logger.info(f"✅ [步骤3.1] API 调用成功，返回数据: {len(test_data) if test_data is not None else 0} 条")
-                    except Exception as e:
-                        err_msg = str(e)
-                        if any(kw in err_msg for kw in ["频率超限", "频次", "每分钟", "每小时", "limit"]):
-                            self.logger.warning(f"⚠️ [步骤3.1] Tushare Token 有效但目前受限于 API 调频控制 ({e})，标记为可连接状态")
-                            rate_limited = True
-                            test_data = None
-                        else:
-                            self.logger.warning(f"⚠️ [步骤3.1] 数据库 Token 测试失败: {e}，尝试降级到 .env 配置...")
-                            test_data = None
-
-                    if (test_data is not None and not test_data.empty) or rate_limited:
+                    if _test_api_connection(self.api):
                         self.connected = True
                         self.token_source = 'database'
                         self.logger.info(f"✅ [步骤3.2] Tushare连接成功 (Token来源: 数据库)")
@@ -191,23 +209,7 @@ class TushareProvider(BaseStockDataProvider):
                     ts.set_token(env_token)
                     self.api = ts.pro_api()
 
-                    # 测试连接 - 直接调用同步方法（不使用 asyncio.run）
-                    rate_limited = False
-                    try:
-                        self.logger.info("🔄 [步骤4.1] 调用 stock_basic API 测试连接...")
-                        test_data = self.api.stock_basic(list_status='L', limit=1)
-                        self.logger.info(f"✅ [步骤4.1] API 调用成功，返回数据: {len(test_data) if test_data is not None else 0} 条")
-                    except Exception as e:
-                        err_msg = str(e)
-                        if any(kw in err_msg for kw in ["频率超限", "频次", "每分钟", "每小时", "limit"]):
-                            self.logger.warning(f"⚠️ [步骤4.1] Tushare .env Token 有效但目前受限于 API 调频控制 ({e})，标记为可连接状态")
-                            rate_limited = True
-                            test_data = None
-                        else:
-                            self.logger.error(f"❌ [步骤4.1] .env Token 测试失败: {e}")
-                            return False
-
-                    if (test_data is not None and not test_data.empty) or rate_limited:
+                    if _test_api_connection(self.api):
                         self.connected = True
                         self.token_source = 'env'
                         self.logger.info(f"✅ [步骤4.2] Tushare连接成功 (Token来源: .env 环境变量)")
