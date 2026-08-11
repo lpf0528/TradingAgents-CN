@@ -4102,9 +4102,9 @@ class ConfigService:
                 "description": "【超低抵扣系数】DeepSeek-V4-Flash，能够提供更加快捷、经济的 API 服务。默认开启深度思考(thinking)，支持手动关闭",
             },
             {
-                "id": "deepseek-v4-flash",
-                "display_name": "deepseek-v4-flash",
-                "description": "【模型抵扣系数较高，推荐用于复杂问题，或关闭深度思考】deepseek-v4-flash，Agent 能力显著增强，具备丰富的世界知识。默认开启深度思考(thinking)，支持手动关闭",
+                "id": "deepseek-v4",
+                "display_name": "DeepSeek-V4",
+                "description": "【模型抵扣系数较高，推荐用于复杂问题，或关闭深度思考】DeepSeek-V4，Agent 能力显著增强，具备丰富的世界知识。默认开启深度思考(thinking)，支持手动关闭",
             },
             {
                 "id": "minimax-m2.7",

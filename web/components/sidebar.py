@@ -543,8 +543,8 @@ def render_sidebar():
                 index=current_index,
                 format_func=lambda x: {
                     "gpt-5.6-luna": "GPT-5.6 Luna - TenRouter",
-                    "qwen3.7-plus": "Qwe3.8 Max - TenRouter",
-                    "deepseek-v4-flash": "DeepSeek V4 Pro - TenRouter",
+                    "qwen3.7-plus": "Qwen3.7 Plus - TenRouter",
+                    "deepseek-v4-flash": "DeepSeek-V4-Flash - TenRouter",
                     "gpt-4o": "GPT-4o - OpenAI最新旗舰",
                     "gpt-4o-mini": "GPT-4o Mini - 轻量旗舰",
                     "gpt-4-turbo": "GPT-4 Turbo - 强化版",
