@@ -150,6 +150,9 @@ class ModelCapabilityService:
                         features_str = config_dict.get('features', [])
                         features_enum = []
                         for feature_str in features_str:
+                            # 🔧 兼容性映射：将 Web 界面/厂家配置的 function_calling/tools 自动转换为内部枚举 tool_calling
+                            if feature_str in ("function_calling", "tools"):
+                                feature_str = "tool_calling"
                             try:
                                 # 将字符串转换为 ModelFeature 枚举
                                 features_enum.append(ModelFeature(feature_str))
